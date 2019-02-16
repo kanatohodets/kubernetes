@@ -114,7 +114,7 @@ func PatchResource(r rest.Patcher, scope RequestScope, admit admission.Interface
 		staticAdmissionAttributes := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Update, userInfo)
 		admissionCheck := func(updatedObject runtime.Object, currentObject runtime.Object) error {
 			if mutatingAdmission, ok := admit.(admission.MutationInterface); ok && admit.Handles(admission.Update) {
-				return mutatingAdmission.Admit(admission.NewAttributesRecord(updatedObject, currentObject, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Update, userInfo))
+				return mutatingAdmission.Admit(admission.NewAttributesRecord(updatedObject, currentObject, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Update, userInfo), &scope)
 			}
 			return nil
 		}
@@ -127,8 +127,8 @@ func PatchResource(r rest.Patcher, scope RequestScope, admit admission.Interface
 			kind:            scope.Kind,
 			resource:        scope.Resource,
 
-			createValidation: rest.AdmissionToValidateObjectFunc(admit, staticAdmissionAttributes),
-			updateValidation: rest.AdmissionToValidateObjectUpdateFunc(admit, staticAdmissionAttributes),
+			createValidation: rest.AdmissionToValidateObjectFunc(admit, staticAdmissionAttributes, &scope),
+			updateValidation: rest.AdmissionToValidateObjectUpdateFunc(admit, staticAdmissionAttributes, &scope),
 			admissionCheck:   admissionCheck,
 
 			codec: codec,
@@ -180,6 +180,8 @@ type patcher struct {
 	unsafeConvertor runtime.ObjectConvertor
 	resource        schema.GroupVersionResource
 	kind            schema.GroupVersionKind
+
+	objectInterfaces admission.ObjectInterfaces
 
 	// Validation functions
 	createValidation rest.ValidateObjectFunc

@@ -103,7 +103,7 @@ func createHandler(r rest.NamedCreater, scope RequestScope, admit admission.Inte
 		userInfo, _ := request.UserFrom(ctx)
 		admissionAttributes := admission.NewAttributesRecord(obj, nil, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Create, userInfo)
 		if mutatingAdmission, ok := admit.(admission.MutationInterface); ok && mutatingAdmission.Handles(admission.Create) {
-			err = mutatingAdmission.Admit(admissionAttributes)
+			err = mutatingAdmission.Admit(admissionAttributes, &scope)
 			if err != nil {
 				scope.err(err, w, req)
 				return
@@ -119,7 +119,7 @@ func createHandler(r rest.NamedCreater, scope RequestScope, admit admission.Inte
 				ctx,
 				name,
 				obj,
-				rest.AdmissionToValidateObjectFunc(admit, admissionAttributes),
+				rest.AdmissionToValidateObjectFunc(admit, admissionAttributes, &scope),
 				includeUninitialized,
 			)
 		})

@@ -73,7 +73,7 @@ import (
 
 type alwaysMutatingDeny struct{}
 
-func (alwaysMutatingDeny) Admit(a admission.Attributes) (err error) {
+func (alwaysMutatingDeny) Admit(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	return admission.NewForbidden(a, errors.New("Mutating admission control is denying all modifications"))
 }
 
@@ -83,7 +83,7 @@ func (alwaysMutatingDeny) Handles(operation admission.Operation) bool {
 
 type alwaysValidatingDeny struct{}
 
-func (alwaysValidatingDeny) Validate(a admission.Attributes) (err error) {
+func (alwaysValidatingDeny) Validate(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	return admission.NewForbidden(a, errors.New("Validating admission control is denying all modifications"))
 }
 

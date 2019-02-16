@@ -22,21 +22,14 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/api/admission/v1beta1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/admission"
 	webhooktesting "k8s.io/apiserver/pkg/admission/plugin/webhook/testing"
 )
 
 // TestAdmit tests that MutatingWebhook#Admit works as expected
 func TestAdmit(t *testing.T) {
-	scheme := runtime.NewScheme()
-	v1beta1.AddToScheme(scheme)
-	corev1.AddToScheme(scheme)
-
 	testServer := webhooktesting.NewTestServer(t)
 	testServer.StartTLS()
 	defer testServer.Close()
@@ -44,6 +37,8 @@ func TestAdmit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("this should never happen? %v", err)
 	}
+
+	objectInterfaces := webhooktesting.NewObjectInterfacesForTest()
 
 	stopCh := make(chan struct{})
 	defer close(stopCh)
@@ -60,7 +55,6 @@ func TestAdmit(t *testing.T) {
 
 		wh.SetAuthenticationInfoResolverWrapper(webhooktesting.Wrapper(webhooktesting.NewAuthenticationInfoResolver(new(int32))))
 		wh.SetServiceResolver(webhooktesting.NewServiceResolver(*serverURL))
-		wh.SetScheme(scheme)
 		wh.SetExternalKubeClientSet(client)
 		wh.SetExternalKubeInformerFactory(informer)
 
@@ -79,7 +73,7 @@ func TestAdmit(t *testing.T) {
 			attr = webhooktesting.NewAttribute(ns, tt.AdditionalLabels)
 		}
 
-		err = wh.Admit(attr)
+		err = wh.Admit(attr, objectInterfaces)
 		if tt.ExpectAllow != (err == nil) {
 			t.Errorf("%s: expected allowed=%v, but got err=%v", tt.Name, tt.ExpectAllow, err)
 		}
@@ -102,10 +96,6 @@ func TestAdmit(t *testing.T) {
 
 // TestAdmitCachedClient tests that MutatingWebhook#Admit should cache restClient
 func TestAdmitCachedClient(t *testing.T) {
-	scheme := runtime.NewScheme()
-	v1beta1.AddToScheme(scheme)
-	corev1.AddToScheme(scheme)
-
 	testServer := webhooktesting.NewTestServer(t)
 	testServer.StartTLS()
 	defer testServer.Close()
@@ -113,6 +103,8 @@ func TestAdmitCachedClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("this should never happen? %v", err)
 	}
+
+	objectInterfaces := webhooktesting.NewObjectInterfacesForTest()
 
 	stopCh := make(chan struct{})
 	defer close(stopCh)
@@ -122,7 +114,6 @@ func TestAdmitCachedClient(t *testing.T) {
 		t.Fatalf("Failed to create mutating webhook: %v", err)
 	}
 	wh.SetServiceResolver(webhooktesting.NewServiceResolver(*serverURL))
-	wh.SetScheme(scheme)
 
 	for _, tt := range webhooktesting.NewCachedClientTestcases(serverURL) {
 		ns := "webhook-test"
@@ -142,7 +133,7 @@ func TestAdmitCachedClient(t *testing.T) {
 			continue
 		}
 
-		err = wh.Admit(webhooktesting.NewAttribute(ns, nil))
+		err = wh.Admit(webhooktesting.NewAttribute(ns, nil), objectInterfaces)
 		if tt.ExpectAllow != (err == nil) {
 			t.Errorf("%s: expected allowed=%v, but got err=%v", tt.Name, tt.ExpectAllow, err)
 		}

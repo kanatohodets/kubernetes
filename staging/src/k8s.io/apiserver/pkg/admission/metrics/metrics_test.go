@@ -34,8 +34,8 @@ var (
 func TestObserveAdmissionStep(t *testing.T) {
 	Metrics.reset()
 	handler := WithStepMetrics(&mutatingAndValidatingFakeHandler{admission.NewHandler(admission.Create), true, true})
-	handler.(admission.MutationInterface).Admit(attr)
-	handler.(admission.ValidationInterface).Validate(attr)
+	handler.(admission.MutationInterface).Admit(attr, nil)
+	handler.(admission.ValidationInterface).Validate(attr, nil)
 	wantLabels := map[string]string{
 		"operation":   string(admission.Create),
 		"group":       resource.Group,
@@ -56,8 +56,8 @@ func TestObserveAdmissionStep(t *testing.T) {
 func TestObserveAdmissionController(t *testing.T) {
 	Metrics.reset()
 	handler := WithControllerMetrics(&mutatingAndValidatingFakeHandler{admission.NewHandler(admission.Create), true, true}, "a")
-	handler.(admission.MutationInterface).Admit(attr)
-	handler.(admission.ValidationInterface).Validate(attr)
+	handler.(admission.MutationInterface).Admit(attr, nil)
+	handler.(admission.ValidationInterface).Validate(attr, nil)
 	wantLabels := map[string]string{
 		"name":        "a",
 		"operation":   string(admission.Create),
@@ -156,7 +156,7 @@ func TestWithMetrics(t *testing.T) {
 		h := WithMetrics(test.handler, Metrics.ObserveAdmissionController, test.name)
 
 		// test mutation
-		err := h.(admission.MutationInterface).Admit(admission.NewAttributesRecord(nil, nil, schema.GroupVersionKind{}, test.ns, "", schema.GroupVersionResource{}, "", test.operation, nil))
+		err := h.(admission.MutationInterface).Admit(admission.NewAttributesRecord(nil, nil, schema.GroupVersionKind{}, test.ns, "", schema.GroupVersionResource{}, "", test.operation, nil), nil)
 		if test.admit && err != nil {
 			t.Errorf("expected admit to succeed, but failed: %v", err)
 			continue
@@ -181,7 +181,7 @@ func TestWithMetrics(t *testing.T) {
 		}
 
 		// test validation
-		err = h.(admission.ValidationInterface).Validate(admission.NewAttributesRecord(nil, nil, schema.GroupVersionKind{}, test.ns, "", schema.GroupVersionResource{}, "", test.operation, nil))
+		err = h.(admission.ValidationInterface).Validate(admission.NewAttributesRecord(nil, nil, schema.GroupVersionKind{}, test.ns, "", schema.GroupVersionResource{}, "", test.operation, nil), nil)
 		if test.validate && err != nil {
 			t.Errorf("expected admit to succeed, but failed: %v", err)
 			continue
@@ -208,14 +208,14 @@ type mutatingAndValidatingFakeHandler struct {
 	validate bool
 }
 
-func (h *mutatingAndValidatingFakeHandler) Admit(a admission.Attributes) (err error) {
+func (h *mutatingAndValidatingFakeHandler) Admit(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	if h.admit {
 		return nil
 	}
 	return fmt.Errorf("don't admit")
 }
 
-func (h *mutatingAndValidatingFakeHandler) Validate(a admission.Attributes) (err error) {
+func (h *mutatingAndValidatingFakeHandler) Validate(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	if h.validate {
 		return nil
 	}
@@ -227,7 +227,7 @@ type validatingFakeHandler struct {
 	validate bool
 }
 
-func (h *validatingFakeHandler) Validate(a admission.Attributes) (err error) {
+func (h *validatingFakeHandler) Validate(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	if h.validate {
 		return nil
 	}
@@ -239,7 +239,7 @@ type mutatingFakeHandler struct {
 	admit bool
 }
 
-func (h *mutatingFakeHandler) Admit(a admission.Attributes) (err error) {
+func (h *mutatingFakeHandler) Admit(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	if h.admit {
 		return nil
 	}

@@ -312,6 +312,7 @@ func (tc *patchTestCase) Run(t *testing.T) {
 	creater := runtime.ObjectCreater(scheme)
 	defaulter := runtime.ObjectDefaulter(scheme)
 	convertor := runtime.UnsafeObjectConvertor(scheme)
+	objectInterfaces := &admission.SchemeBasedObjectInterfaces{scheme}
 	kind := examplev1.SchemeGroupVersion.WithKind("Pod")
 	resource := examplev1.SchemeGroupVersion.WithResource("pods")
 	schemaReferenceObj := &examplev1.Pod{}
@@ -386,6 +387,8 @@ func (tc *patchTestCase) Run(t *testing.T) {
 			unsafeConvertor: convertor,
 			kind:            kind,
 			resource:        resource,
+
+			objectInterfaces: objectInterfaces,
 
 			createValidation: rest.ValidateAllObjectFunc,
 			updateValidation: admissionValidation,

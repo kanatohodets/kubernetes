@@ -105,13 +105,13 @@ func DeleteResource(r rest.GracefulDeleter, allowsOptions bool, scope RequestSco
 			userInfo, _ := request.UserFrom(ctx)
 			attrs := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Delete, userInfo)
 			if mutatingAdmission, ok := admit.(admission.MutationInterface); ok {
-				if err := mutatingAdmission.Admit(attrs); err != nil {
+				if err := mutatingAdmission.Admit(attrs, &scope); err != nil {
 					scope.err(err, w, req)
 					return
 				}
 			}
 			if validatingAdmission, ok := admit.(admission.ValidationInterface); ok {
-				if err := validatingAdmission.Validate(attrs); err != nil {
+				if err := validatingAdmission.Validate(attrs, &scope); err != nil {
 					scope.err(err, w, req)
 					return
 				}
@@ -197,7 +197,7 @@ func DeleteCollection(r rest.CollectionDeleter, checkBody bool, scope RequestSco
 			userInfo, _ := request.UserFrom(ctx)
 			attrs := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, "", scope.Resource, scope.Subresource, admission.Delete, userInfo)
 			if mutatingAdmission, ok := admit.(admission.MutationInterface); ok {
-				err = mutatingAdmission.Admit(attrs)
+				err = mutatingAdmission.Admit(attrs, &scope)
 				if err != nil {
 					scope.err(err, w, req)
 					return
