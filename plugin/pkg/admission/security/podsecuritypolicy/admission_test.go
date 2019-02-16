@@ -474,7 +474,7 @@ func TestFailClosedOnInvalidPod(t *testing.T) {
 	pod := &v1.Pod{}
 	attrs := kadmission.NewAttributesRecord(pod, nil, kapi.Kind("Pod").WithVersion("version"), pod.Namespace, pod.Name, kapi.Resource("pods").WithVersion("version"), "", kadmission.Create, &user.DefaultInfo{})
 
-	err := plugin.Admit(attrs)
+	err := plugin.Admit(attrs, nil)
 	if err == nil {
 		t.Fatalf("expected versioned pod object to fail mutating admission")
 	}
@@ -482,7 +482,7 @@ func TestFailClosedOnInvalidPod(t *testing.T) {
 		t.Errorf("expected type error on Admit but got: %v", err)
 	}
 
-	err = plugin.Validate(attrs)
+	err = plugin.Validate(attrs, nil)
 	if err == nil {
 		t.Fatalf("expected versioned pod object to fail validating admission")
 	}
@@ -1772,7 +1772,7 @@ func testPSPAdmitAdvanced(testCaseName string, op kadmission.Operation, psps []*
 	attrs := kadmission.NewAttributesRecord(pod, oldPod, kapi.Kind("Pod").WithVersion("version"), pod.Namespace, "", kapi.Resource("pods").WithVersion("version"), "", op, userInfo)
 	annotations := make(map[string]string)
 	attrs = &fakeAttributes{attrs, annotations}
-	err := plugin.Admit(attrs)
+	err := plugin.Admit(attrs, nil)
 
 	if shouldPassAdmit && err != nil {
 		t.Errorf("%s: expected no errors on Admit but received %v", testCaseName, err)
@@ -1800,7 +1800,7 @@ func testPSPAdmitAdvanced(testCaseName string, op kadmission.Operation, psps []*
 		t.Errorf("%s: expected errors on Admit but received none", testCaseName)
 	}
 
-	err = plugin.Validate(attrs)
+	err = plugin.Validate(attrs, nil)
 	psp := ""
 	if shouldPassAdmit && op == kadmission.Create {
 		psp = expectedPSP

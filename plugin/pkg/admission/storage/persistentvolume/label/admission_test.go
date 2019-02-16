@@ -115,7 +115,7 @@ func TestAdmission(t *testing.T) {
 	}
 
 	// We only add labels on creation
-	err = handler.Admit(admission.NewAttributesRecord(&awsPV, nil, api.Kind("PersistentVolume").WithVersion("version"), awsPV.Namespace, awsPV.Name, api.Resource("persistentvolumes").WithVersion("version"), "", admission.Delete, nil))
+	err = handler.Admit(admission.NewAttributesRecord(&awsPV, nil, api.Kind("PersistentVolume").WithVersion("version"), awsPV.Namespace, awsPV.Name, api.Resource("persistentvolumes").WithVersion("version"), "", admission.Delete, nil), nil)
 	if err != nil {
 		t.Errorf("Unexpected error returned from admission handler (when deleting aws pv):  %v", err)
 	}

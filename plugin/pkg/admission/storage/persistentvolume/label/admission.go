@@ -79,7 +79,7 @@ func (l *persistentVolumeLabel) SetCloudConfig(cloudConfig []byte) {
 	l.cloudConfig = cloudConfig
 }
 
-func (l *persistentVolumeLabel) Admit(a admission.Attributes) (err error) {
+func (l *persistentVolumeLabel) Admit(a admission.Attributes, o admission.ObjectInterfaces) (err error) {
 	if a.GetResource().GroupResource() != api.Resource("persistentvolumes") {
 		return nil
 	}

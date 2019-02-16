@@ -821,7 +821,7 @@ func admitPod(pod *api.Pod, pip *settings.PodPreset) error {
 		&user.DefaultInfo{},
 	)
 
-	err := plugin.Admit(attrs)
+	err := plugin.Admit(attrs, nil)
 	if err != nil {
 		return err
 	}

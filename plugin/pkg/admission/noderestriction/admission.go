@@ -92,7 +92,7 @@ var (
 	svcacctResource = api.Resource("serviceaccounts")
 )
 
-func (c *nodePlugin) Admit(a admission.Attributes) error {
+func (c *nodePlugin) Admit(a admission.Attributes, o admission.ObjectInterfaces) error {
 	nodeName, isNode := c.nodeIdentifier.NodeIdentity(a.GetUserInfo())
 
 	// Our job is just to restrict nodes

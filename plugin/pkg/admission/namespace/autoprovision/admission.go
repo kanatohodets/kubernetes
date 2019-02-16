@@ -54,7 +54,7 @@ var _ = kubeapiserveradmission.WantsInternalKubeInformerFactory(&Provision{})
 var _ = kubeapiserveradmission.WantsInternalKubeClientSet(&Provision{})
 
 // Admit makes an admission decision based on the request attributes
-func (p *Provision) Admit(a admission.Attributes) error {
+func (p *Provision) Admit(a admission.Attributes, o admission.ObjectInterfaces) error {
 	// if we're here, then we've already passed authentication, so we're allowed to do what we're trying to do
 	// if we're here, then the API server has found a route, which means that if we have a non-empty namespace
 	// its a namespaced resource.
