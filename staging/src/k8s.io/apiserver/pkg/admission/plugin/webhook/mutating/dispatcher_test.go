@@ -47,6 +47,7 @@ func TestDispatch(t *testing.T) {
 	example.AddToScheme(scheme)
 	examplev1.AddToScheme(scheme)
 	example2v1.AddToScheme(scheme)
+	objectInterfaces := &admission.SchemeBasedObjectInterfaces{scheme}
 
 	tests := []struct {
 		name        string
@@ -116,16 +117,14 @@ func TestDispatch(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			a := &mutatingDispatcher{
-				plugin: &Plugin{
-					scheme: scheme,
-				},
+				plugin: &Plugin{},
 			}
 			attr := generic.VersionedAttributes{
 				Attributes:         admission.NewAttributesRecord(test.out, nil, schema.GroupVersionKind{}, "", "", schema.GroupVersionResource{}, "", admission.Operation(""), nil),
 				VersionedOldObject: nil,
 				VersionedObject:    test.in,
 			}
-			if err := a.Dispatch(context.TODO(), &attr, nil); err != nil {
+			if err := a.Dispatch(context.TODO(), &attr, objectInterfaces, nil); err != nil {
 				t.Fatalf("%s: unexpected error: %v", test.name, err)
 			}
 			if !reflect.DeepEqual(attr.Attributes.GetObject(), test.expectedObj) {

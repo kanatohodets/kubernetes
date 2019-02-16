@@ -23,7 +23,6 @@ import (
 
 	"k8s.io/api/admissionregistration/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/admission"
 	genericadmissioninit "k8s.io/apiserver/pkg/admission/initializer"
 	"k8s.io/apiserver/pkg/admission/plugin/webhook/config"
@@ -94,13 +93,6 @@ func (a *Webhook) SetAuthenticationInfoResolverWrapper(wrapper config.Authentica
 // Passing a nil resolver does not have an effect, instead a default one will be used.
 func (a *Webhook) SetServiceResolver(sr config.ServiceResolver) {
 	a.clientManager.SetServiceResolver(sr)
-}
-
-// SetScheme sets a serializer(NegotiatedSerializer) which is derived from the scheme
-func (a *Webhook) SetScheme(scheme *runtime.Scheme) {
-	if scheme != nil {
-		a.convertor.Scheme = scheme
-	}
 }
 
 // SetExternalKubeClientSet implements the WantsExternalKubeInformerFactory interface.
@@ -198,5 +190,5 @@ func (a *Webhook) Dispatch(attr admission.Attributes) error {
 		}
 		versionedAttr.VersionedObject = out
 	}
-	return a.dispatcher.Dispatch(ctx, &versionedAttr, relevantHooks)
+	return a.dispatcher.Dispatch(ctx, &versionedAttr, o, relevantHooks)
 }

@@ -68,7 +68,6 @@ func createAggregatorConfig(
 		&genericConfig,
 		externalInformers,
 		genericConfig.LoopbackClientConfig,
-		aggregatorscheme.Scheme,
 		pluginInitializers...)
 
 	// the aggregator doesn't wire these up.  It just delegates them to the kubeapiserver

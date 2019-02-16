@@ -47,7 +47,6 @@ func createAPIExtensionsConfig(
 		&genericConfig,
 		externalInformers,
 		genericConfig.LoopbackClientConfig,
-		apiextensionsapiserver.Scheme,
 		pluginInitializers...)
 
 	// copy the etcd options so we don't mutate originals.
