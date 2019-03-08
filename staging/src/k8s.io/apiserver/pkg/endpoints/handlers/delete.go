@@ -205,7 +205,7 @@ func DeleteCollection(r rest.CollectionDeleter, checkBody bool, scope RequestSco
 			}
 
 			if validatingAdmission, ok := admit.(admission.ValidationInterface); ok {
-				err = validatingAdmission.Validate(attrs)
+				err = validatingAdmission.Validate(attrs, &scope)
 				if err != nil {
 					scope.err(err, w, req)
 					return

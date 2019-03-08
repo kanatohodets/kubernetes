@@ -93,10 +93,6 @@ func (a *Webhook) SetServiceResolver(sr config.ServiceResolver) {
 	a.clientManager.SetServiceResolver(sr)
 }
 
-// SetScheme sets a serializer(NegotiatedSerializer) which is derived from the scheme
-func (a *Webhook) SetScheme(scheme *runtime.Scheme) {
-}
-
 // SetExternalKubeClientSet implements the WantsExternalKubeInformerFactory interface.
 // It sets external ClientSet for admission plugins that need it
 func (a *Webhook) SetExternalKubeClientSet(client clientset.Interface) {
