@@ -66,6 +66,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/checkpointmanager"
 	"k8s.io/kubernetes/pkg/kubelet/cloudresource"
 	"k8s.io/kubernetes/pkg/kubelet/cm"
+	"k8s.io/kubernetes/pkg/kubelet/commitclass"
 	"k8s.io/kubernetes/pkg/kubelet/config"
 	"k8s.io/kubernetes/pkg/kubelet/configmap"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
@@ -661,6 +662,9 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		klet.runtimeClassManager = runtimeclass.NewManager(kubeDeps.DynamicKubeClient)
 	}
 
+	// TODO(btyler) feature gate
+	klet.commitClassManager = commitclass.NewManager(kubeDeps.DynamicKubeClient)
+
 	runtime, err := kuberuntime.NewKubeGenericRuntimeManager(
 		kubecontainer.FilterEventRecorder(kubeDeps.Recorder),
 		klet.livenessManager,
@@ -1205,6 +1209,9 @@ type Kubelet struct {
 
 	// Handles RuntimeClass objects for the Kubelet.
 	runtimeClassManager *runtimeclass.Manager
+
+	// Handles CommitClass objects for the Kubelet.
+	commitClassManager *commitclass.Manager
 }
 
 func allGlobalUnicastIPs() ([]net.IP, error) {
@@ -1428,6 +1435,11 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 	// Start syncing RuntimeClasses if enabled.
 	if kl.runtimeClassManager != nil {
 		go kl.runtimeClassManager.Run(wait.NeverStop)
+	}
+
+	// Start syncing CommitClasses if enabled.
+	if kl.commitClassManager != nil {
+		go kl.commitClassManager.Run(wait.NeverStop)
 	}
 
 	// Start the pod lifecycle event generator.

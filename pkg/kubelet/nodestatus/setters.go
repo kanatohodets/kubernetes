@@ -37,6 +37,7 @@ import (
 	kubeletapis "k8s.io/kubernetes/pkg/kubelet/apis"
 	"k8s.io/kubernetes/pkg/kubelet/cadvisor"
 	"k8s.io/kubernetes/pkg/kubelet/cm"
+	"k8s.io/kubernetes/pkg/kubelet/commitclass"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	"k8s.io/kubernetes/pkg/kubelet/events"
 	"k8s.io/kubernetes/pkg/version"
@@ -217,6 +218,7 @@ func MachineInfo(nodeName string,
 	capacityFunc func() v1.ResourceList, // typically Kubelet.containerManager.GetCapacity
 	devicePluginResourceCapacityFunc func() (v1.ResourceList, v1.ResourceList, []string), // typically Kubelet.containerManager.GetDevicePluginResourceCapacity
 	nodeAllocatableReservationFunc func() v1.ResourceList, // typically Kubelet.containerManager.GetNodeAllocatableReservation
+	commitClassFunc func(node *v1.Node) (commitclass.ResourceScales, error), // typically Kubelet.commitClassManager.GetActiveCommitClass
 	recordEventFunc func(eventType, event, message string), // typically Kubelet.recordEvent
 ) Setter {
 	return func(node *v1.Node) error {
@@ -344,6 +346,33 @@ func MachineInfo(nodeName string,
 				node.Status.Allocatable[v1.ResourceMemory] = allocatableMemory
 			}
 		}
+		commitClass, err := commitClassFunc(node)
+		if err != nil {
+			glog.Errorf("DANG COMMITCLASS IS BROKE %+v", err)
+			return err
+		}
+
+		// do this last so that reserved resources are not compressed by oversubscription
+		for rName, rCap := range node.Status.Allocatable {
+			commitLevel, ok := commitClass[string(rName)]
+			if !ok {
+				continue
+			}
+			scaled := commitLevel * float64(rCap.Value())
+			rCap.Set(int64(scaled))
+			node.Status.Allocatable[rName] = rCap
+		}
+
+		for rName, rCap := range node.Status.Capacity {
+			commitLevel, ok := commitClass[string(rName)]
+			if !ok {
+				continue
+			}
+			scaled := commitLevel * float64(rCap.Value())
+			rCap.Set(int64(scaled))
+			node.Status.Capacity[rName] = rCap
+		}
+
 		return nil
 	}
 }
