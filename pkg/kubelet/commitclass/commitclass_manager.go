@@ -146,7 +146,7 @@ func (m *Manager) GetCommitSettings(node *v1.Node) (*Settings, error) {
 		selector := cc.Spec.Selector
 		// TODO(btyler) should any node fields be included? how should they be represented?
 		matches := v1helper.MatchNodeSelectorTerms([]v1.NodeSelectorTerm{selector}, node.Labels, nil)
-		// take the first matching CommitClass in lexical order
+		// take the first matching CommitClass in lexical order, per the sort above
 		if matches {
 			for _, resource := range cc.Spec.Resources {
 				settings.Set(resource.Name, resource.Percent)
