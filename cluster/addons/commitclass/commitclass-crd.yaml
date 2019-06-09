@@ -20,4 +20,44 @@ spec:
     singular: commitclass
     # kind is normally the CamelCased singular type. Your resource manifests use this.
     kind: CommitClass
-
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          type: object
+          required:
+          - resources
+          - selector
+          properties:
+            selector:
+              type: object
+              properties:
+                matchExpressions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - key
+                    - operator
+                    properties:
+                      key:
+                        type: string
+                      operator:
+                        type: string
+                      values:
+                        type: array
+                        items:
+                          type: string
+            resources:
+              type: array
+              items:
+                type: object
+                required:
+                - name
+                - percent
+                properties:
+                  name:
+                    type: string
+                  percent:
+                    type: integer
+                    minimum: 0
