@@ -347,18 +347,20 @@ func MachineInfo(nodeName string,
 			}
 		}
 
-		commitSettings, err := commitSettingsFunc(node)
-		if err != nil {
-			glog.Errorf("DANG COMMITCLASS IS BROKE %+v", err)
-			return err
-		}
+		if utilfeature.DefaultFeatureGate.Enabled(features.CommitClass) {
+			commitSettings, err := commitSettingsFunc(node)
+			if err != nil {
+				glog.Errorf("DANG COMMITCLASS IS BROKE %+v", err)
+				return err
+			}
 
-		for rName, rCap := range node.Status.Allocatable {
-			node.Status.Allocatable[rName] = commitSettings.Scale(rName, rCap)
-		}
+			for rName, rCap := range node.Status.Allocatable {
+				node.Status.Allocatable[rName] = commitSettings.Scale(rName, rCap)
+			}
 
-		for rName, rCap := range node.Status.Capacity {
-			node.Status.Capacity[rName] = commitSettings.Scale(rName, rCap)
+			for rName, rCap := range node.Status.Capacity {
+				node.Status.Capacity[rName] = commitSettings.Scale(rName, rCap)
+			}
 		}
 
 		return nil

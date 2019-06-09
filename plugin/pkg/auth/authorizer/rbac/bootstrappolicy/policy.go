@@ -180,9 +180,11 @@ func NodeRules() []rbacv1.PolicyRule {
 		nodePolicyRules = append(nodePolicyRules, rbacv1helpers.NewRule("get", "list", "watch").Groups("node.k8s.io").Resources("runtimeclasses").RuleOrDie())
 	}
 
-	//TODO(btyler) feature gate
-	commitClassRule := rbacv1helpers.NewRule("get", "watch", "list").Groups("node.k8s.io").Resources("commitclasses").RuleOrDie()
-	nodePolicyRules = append(nodePolicyRules, commitClassRule)
+	// CommitClass
+	if utilfeature.DefaultFeatureGate.Enabled(features.CommitClass) {
+		commitClassRule := rbacv1helpers.NewRule("get", "watch", "list").Groups("node.k8s.io").Resources("commitclasses").RuleOrDie()
+		nodePolicyRules = append(nodePolicyRules, commitClassRule)
+	}
 
 	return nodePolicyRules
 }

@@ -662,8 +662,9 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		klet.runtimeClassManager = runtimeclass.NewManager(kubeDeps.DynamicKubeClient)
 	}
 
-	// TODO(btyler) feature gate
-	klet.commitClassManager = commitclass.NewManager(kubeDeps.DynamicKubeClient)
+	if utilfeature.DefaultFeatureGate.Enabled(features.CommitClass) && kubeDeps.DynamicKubeClient != nil {
+		klet.commitClassManager = commitclass.NewManager(kubeDeps.DynamicKubeClient)
+	}
 
 	runtime, err := kuberuntime.NewKubeGenericRuntimeManager(
 		kubecontainer.FilterEventRecorder(kubeDeps.Recorder),

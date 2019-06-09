@@ -377,6 +377,12 @@ const (
 	//
 	// Allow TTL controller to clean up Pods and Jobs after they finish.
 	TTLAfterFinished utilfeature.Feature = "TTLAfterFinished"
+
+	// owner: @kanatohodets
+	// alpha: v1.16
+	//
+	// Enables CommitClass, for over- or under- commiting node resources
+	CommitClass utilfeature.Feature = "CommitClass"
 )
 
 func init() {
@@ -443,6 +449,7 @@ var defaultKubernetesFeatureGates = map[utilfeature.Feature]utilfeature.FeatureS
 	VolumeSnapshotDataSource:                    {Default: false, PreRelease: utilfeature.Alpha},
 	ProcMountType:                               {Default: false, PreRelease: utilfeature.Alpha},
 	TTLAfterFinished:                            {Default: false, PreRelease: utilfeature.Alpha},
+	CommitClass:                                 {Default: false, PreRelease: utilfeature.Alpha},
 
 	// inherited features from generic apiserver, relisted here to get a conflict if it is changed
 	// unintentionally on either side:
