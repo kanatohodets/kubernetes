@@ -49,10 +49,10 @@ type CommitClassSpec struct {
 	Selector v1.NodeSelectorTerm `json:"selector" protobuf:"bytes,2,name=selector"`
 
 	// A list of resources with associated commit factors
-	Resources []ResourceCommitFactor `json:"resources" protobuf:"bytes,3,name=resources"`
+	Resources []ResourceCommitPercent `json:"resources" protobuf:"bytes,3,name=resources"`
 }
 
-type ResourceCommitFactor struct {
+type ResourceCommitPercent struct {
 	Name    string `json:"name" protobuf:"bytes,1,name=name"`
 	Percent int32  `json:"percent" protobuf:"bytes,2,name=percent"`
 }
