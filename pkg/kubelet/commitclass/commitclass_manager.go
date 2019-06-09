@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -65,7 +66,33 @@ var (
 	}
 )
 
-type ResourceScales map[string]float64
+type Settings struct {
+	scales map[string]float64
+}
+
+func NewSettings() *Settings {
+	return &Settings{
+		scales: map[string]float64{},
+	}
+}
+
+func (s *Settings) Set(name string, percent int32) {
+	scaleFactor := float64(percent) / 100
+	s.scales[name] = scaleFactor
+}
+
+func (s *Settings) Scale(name v1.ResourceName, quantity resource.Quantity) resource.Quantity {
+	commitLevel, ok := s.scales[string(name)]
+	// an implicit 'scale to 100% of current'
+	if !ok {
+		return quantity
+	}
+
+	scaled := commitLevel * float64(quantity.Value())
+	quantity.Set(int64(scaled))
+	return quantity
+}
+
 type Manager struct {
 	informer cache.SharedInformer
 }
@@ -89,10 +116,9 @@ func (m *Manager) Run(stopCh <-chan struct{}) {
 	m.informer.Run(stopCh)
 }
 
-func (m *Manager) GetActiveCommitClass(node *v1.Node) (ResourceScales, error) {
+func (m *Manager) GetCommitSettings(node *v1.Node) (*Settings, error) {
 	// threadsafe as long as no items are mutated
 	items := m.informer.GetStore().List()
-	scales := ResourceScales{}
 	commitClasses := make([]CommitClass, 0, len(items))
 	for _, item := range items {
 		unstructuredCC, ok := item.(*unstructured.Unstructured)
@@ -115,6 +141,7 @@ func (m *Manager) GetActiveCommitClass(node *v1.Node) (ResourceScales, error) {
 		return commitClasses[i].Name < commitClasses[j].Name
 	})
 
+	settings := NewSettings()
 	for _, cc := range commitClasses {
 		selector := cc.Spec.Selector
 		// TODO(btyler) should any node fields be included? how should they be represented?
@@ -122,12 +149,11 @@ func (m *Manager) GetActiveCommitClass(node *v1.Node) (ResourceScales, error) {
 		// take the first matching CommitClass in lexical order
 		if matches {
 			for _, resource := range cc.Spec.Resources {
-				scaleFactor := float64(resource.Percent) / 100
-				scales[resource.Name] = scaleFactor
+				settings.Set(resource.Name, resource.Percent)
 			}
 			break
 		}
 	}
 
-	return scales, nil
+	return settings, nil
 }
