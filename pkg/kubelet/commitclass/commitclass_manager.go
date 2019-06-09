@@ -97,6 +97,12 @@ type Manager struct {
 	informer cache.SharedInformer
 }
 
+var resourceWhitelist []v1.ResourceName = []v1.ResourceName{
+	v1.ResourceCPU,
+	v1.ResourceMemory,
+	v1.ResourceEphemeralStorage,
+}
+
 func NewManager(client dynamic.Interface) *Manager {
 	rc := client.Resource(commitClassGVR)
 	lw := &cache.ListWatch{
@@ -149,11 +155,22 @@ func (m *Manager) GetCommitSettings(node *v1.Node) (*Settings, error) {
 		// take the first matching CommitClass in lexical order, per the sort above
 		if matches {
 			for _, resource := range cc.Spec.Resources {
-				settings.Set(resource.Name, resource.Percent)
+				if validResource(resource.Name) {
+					settings.Set(resource.Name, resource.Percent)
+				}
 			}
 			break
 		}
 	}
 
 	return settings, nil
+}
+
+func validResource(resourceName string) bool {
+	for _, allowed := range resourceWhitelist {
+		if resourceName == string(allowed) {
+			return true
+		}
+	}
+	return false
 }
