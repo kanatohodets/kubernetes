@@ -62,6 +62,9 @@ const (
 	ConfigUIDLabelKey             = "node_config_uid"
 	ConfigResourceVersionLabelKey = "node_config_resource_version"
 	KubeletConfigKeyLabelKey      = "node_config_kubelet_key"
+
+	// Metric keys for node CommitClass
+	ResourceCommitScalePercentKey = "resource_commit_scale_percent"
 )
 
 var (
@@ -199,6 +202,15 @@ var (
 			Help:      "This metric is true (1) if the node is experiencing a configuration-related error, false (0) otherwise.",
 		},
 	)
+
+	ResourceCommitScalePercent = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: KubeletSubsystem,
+			Name:      ResourceCommitScalePercentKey,
+			Help:      "The over- or under- commit percentage in effect on this node (per resource)",
+		},
+		[]string{"resource_name"},
+	)
 )
 
 var registerMetrics sync.Once
@@ -227,6 +239,11 @@ func Register(containerCache kubecontainer.RuntimeCache, collectors ...prometheu
 			prometheus.MustRegister(LastKnownGoodConfig)
 			prometheus.MustRegister(ConfigError)
 		}
+
+		if utilfeature.DefaultFeatureGate.Enabled(features.CommitClass) {
+			prometheus.MustRegister(ResourceCommitScalePercent)
+		}
+
 		for _, collector := range collectors {
 			prometheus.MustRegister(collector)
 		}

@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
 	v1helper "k8s.io/kubernetes/pkg/apis/core/v1/helper"
+	"k8s.io/kubernetes/pkg/kubelet/metrics"
 )
 
 // structs defined here because I couldn't figure out how to get codegen to
@@ -71,8 +72,15 @@ type Settings struct {
 }
 
 func NewSettings() *Settings {
+	defaultScales := map[string]float64{}
+	for _, resourceName := range resourceWhitelist {
+		name := string(resourceName)
+		defaultScales[name] = 1
+		metrics.ResourceCommitScalePercent.WithLabelValues(name).Set(100)
+	}
+
 	return &Settings{
-		scales: map[string]float64{},
+		scales: defaultScales,
 	}
 }
 
@@ -156,6 +164,7 @@ func (m *Manager) GetCommitSettings(node *v1.Node) (*Settings, error) {
 		if matches {
 			for _, resource := range cc.Spec.Resources {
 				if validResource(resource.Name) {
+					metrics.ResourceCommitScalePercent.WithLabelValues(resource.Name).Set(float64(resource.Percent))
 					settings.Set(resource.Name, resource.Percent)
 				}
 			}
