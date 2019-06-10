@@ -357,10 +357,6 @@ func MachineInfo(nodeName string,
 			for rName, rCap := range node.Status.Allocatable {
 				node.Status.Allocatable[rName] = commitSettings.Scale(rName, rCap)
 			}
-
-			for rName, rCap := range node.Status.Capacity {
-				node.Status.Capacity[rName] = commitSettings.Scale(rName, rCap)
-			}
 		}
 
 		return nil
